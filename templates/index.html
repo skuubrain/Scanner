@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Solana Scanner & Tracker ⚡</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e1e1e 0%, #2d1b4e 100%);
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin: 30px 0 20px;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .tab-button {
+            background: transparent;
+            color: #aaa;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-button:hover {
+            color: #fff;
+        }
+
+        .tab-button.active {
+            color: #6c63ff;
+            border-bottom: 3px solid #6c63ff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #6c63ff 0%, #9b5de5 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.4);
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108, 99, 255, 0.6);
+        }
+
+        .btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-small {
+            padding: 8px 20px;
+            font-size: 0.9em;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00d4aa 0%, #00a080 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4757 0%, #e84118 100%);
+        }
+
+        .status {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+
+        .last-scan {
+            color: #6c63ff;
+            font-weight: bold;
+        }
+
+        .loading {
+            display: none;
+            margin: 20px auto;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid #6c63ff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        th {
+            background: linear-gradient(135deg, #6c63ff 0%, #5a54d6 100%);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9em;
+        }
+
+        tr:hover {
+            background: rgba(108, 99, 255, 0.1);
+        }
+
+        .token-address {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #6c63ff;
+            word-break: break-all;
+        }
+
+        .wallet-list {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            color: #aaa;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .wallet-address {
+            padding: 8px;
+            margin: 2px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .wallet-addr {
+            flex: 1;
+            word-break: break-all;
+            min-width: 200px;
+        }
+
+        .purchase-time {
+            font-size: 0.8em;
+            color: #00d4aa;
+            white-space: nowrap;
+        }
+
+        .holding-status {
+            margin-left: 10px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .status-holding {
+            background: #00d4aa;
+            color: #000;
+        }
+
+        .status-sold {
+            background: #ff4757;
+            color: #fff;
+        }
+
+        .status-checking {
+            background: #ffa502;
+            color: #000;
+        }
+
+        .count-badge {
+            background: #6c63ff;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .timestamp-badge {
+            background: #00d4aa;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .holdings-summary {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .holdings-summary.active {
+            display: block;
+        }
+
+        .summary-stat {
+            display: inline-block;
+            margin: 5px 10px;
+        }
+
+        .stat-holding {
+            color: #00d4aa;
+            font-weight: bold;
+        }
+
+        .stat-sold {
+            color: #ff4757;
+            font-weight: bold;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            font-size: 1.2em;
+            color: #888;
+        }
+
+        .add-wallet-form {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .input-field {
+            padding: 12px 20px;
+            border-radius: 25px;
+            border: 2px solid rgba(108, 99, 255, 0.3);
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 1em;
+            min-width: 300px;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #6c63ff;
+        }
+
+        .custom-wallet-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px 0;
+            border-left: 4px solid #6c63ff;
+        }
+
+        .custom-wallet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .custom-wallet-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #6c63ff;
+        }
+
+        .custom-wallet-address {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #aaa;
+            margin: 5px 0;
+        }
+
+        .token-list {
+            margin-top: 15px;
+        }
+
+        .token-item {
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            color: #666;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Solana Scanner & Tracker ⚡</h1>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('scanner')">🔍 Scanner</button>
+            <button class="tab-button" onclick="switchTab('tracker')">📊 Custom Tracker</button>
+        </div>
+
+        <div id="scanner-tab" class="tab-content active">
+            <div class="controls">
+                <button class="btn" onclick="startScan()" id="scanBtn">
+                    🔍 Run New Scan
+                </button>
+                <div class="status">
+                    Last scan: <span class="last-scan">{{ last_scan }}</span>
+                </div>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Scanning wallets... This may take a few minutes</p>
+            </div>
+
+            {% if results %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Token Address</th>
+                        <th>First Seen</th>
+                        <th>Wallets Buying</th>
+                        <th>Actions</th>
+                        <th>Wallet Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for token, info in results.items() %}
+                    <tr>
+                        <td class="token-address">{{ token }}</td>
+                        <td>
+                            <span class="timestamp-badge">{{ info.token_first_seen }}</span>
+                        </td>
+                        <td><span class="count-badge">{{ info.wallet_count }}</span></td>
+                        <td>
+                            <button class="btn btn-small btn-success" onclick="checkHoldings('{{ token }}', {{ loop.index }})" id="btn-{{ loop.index }}">
+                                📊 Check Holdings
+                            </button>
+                            <div class="holdings-summary" id="summary-{{ loop.index }}">
+                                <div class="summary-stat">
+                                    Still Holding: <span class="stat-holding" id="holding-count-{{ loop.index }}">-</span>
+                                </div>
+                                <div class="summary-stat">
+                                    Sold: <span class="stat-sold" id="sold-count-{{ loop.index }}">-</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="wallet-list" id="wallets-{{ loop.index }}">
+                            {% for wallet, wallet_info in info.wallets.items() %}
+                            <div class="wallet-address">
+                                <span class="wallet-addr">{{ wallet }}</span>
+                                <span class="purchase-time">📅 {{ wallet_info.purchase_time }}</span>
+                            </div>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-results">
+                <p>No scan results yet. Click "Run New Scan" to start scanning!</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div id="tracker-tab" class="tab-content">
+            <div class="controls">
+                <h2>Add Custom Wallet to Track</h2>
+                <div class="add-wallet-form">
+                    <input type="text" id="walletAddress" class="input-field" placeholder="Wallet Address" />
+                    <input type="text" id="walletName" class="input-field" placeholder="Wallet Name (optional)" />
+                    <button class="btn" onclick="addWallet()">➕ Add Wallet</button>
+                </div>
+                <button class="btn btn-success" onclick="scanCustomWallets()" id="scanCustomBtn">
+                    🔍 Scan Custom Wallets
+                </button>
+            </div>
+
+            <div class="loading" id="customLoading">
+                <div class="spinner"></div>
+                <p>Scanning custom wallets...</p>
+            </div>
+
+            <div id="customWalletsList">
+                <h3 style="margin: 20px 0;">Tracked Wallets ({{ custom_wallets|length }})</h3>
+                {% if custom_wallets %}
+                    {% for wallet in custom_wallets %}
+                    <div class="custom-wallet-card" id="wallet-card-{{ loop.index }}">
+                        <div class="custom-wallet-header">
+                            <div>
+                                <div class="custom-wallet-name">{{ wallet.name }}</div>
+                                <div class="custom-wallet-address">{{ wallet.address }}</div>
+                                <div style="font-size: 0.8em; color: #888; margin-top: 5px;">
+                                    Added: {{ wallet.added_at }}
+                                </div>
+                            </div>
+                            <button class="btn btn-small btn-danger" onclick="removeWallet('{{ wallet.address }}', {{ loop.index }})">
+                                🗑️ Remove
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-results">
+                        <p>No custom wallets added yet. Add a wallet above to start tracking!</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div id="customResults" style="margin-top: 30px;">
+                {% if custom_results %}
+                <h3>Latest Scan Results</h3>
+                {% for result in custom_results %}
+                <div class="custom-wallet-card">
+                    <div class="custom-wallet-name">{{ result.wallet_name }}</div>
+                    <div class="custom-wallet-address">{{ result.wallet_address }}</div>
+                    <div style="margin: 10px 0;">
+                        <span class="count-badge">{{ result.total_tokens }} tokens bought</span>
+                        <span style="margin-left: 10px; color: #888;">Scanned: {{ result.scanned_at }}</span>
+                    </div>
+                    <div class="token-list">
+                        {% for token in result.tokens_bought %}
+                        <div class="token-item">
+                            <span class="token-address">{{ token.token }}</span>
+                            <span class="purchase-time">📅 {{ token.first_purchase }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="footer">
+            Powered by Solana Scanner 💜<br>
+            Tracking {{ results|length if results else 0 }} token signals | {{ custom_wallets|length }} custom wallets
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            const buttons = document.querySelectorAll('.tab-button');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            buttons.forEach(btn => btn.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+            
+            if (tab === 'scanner') {
+                buttons[0].classList.add('active');
+                document.getElementById('scanner-tab').classList.add('active');
+            } else {
+                buttons[1].classList.add('active');
+                document.getElementById('tracker-tab').classList.add('active');
+            }
+        }
+
+        function startScan() {
+            const btn = document.getElementById('scanBtn');
+            const loading = document.getElementById('loading');
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Scanning...';
+            loading.classList.add('active');
+
+            window.location.href = '/scan';
+        }
+
+        async function checkHoldings(token, index) {
+            const btn = document.getElementById(`btn-${index}`);
+            const summary = document.getElementById(`summary-${index}`);
+            const walletsDiv = document.getElementById(`wallets-${index}`);
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Checking...';
+
+            const walletDivs = walletsDiv.querySelectorAll('.wallet-address');
+            walletDivs.forEach(div => {
+                const existingStatus = div.querySelector('.holding-status');
+                if (!existingStatus) {
+                    div.innerHTML += '<span class="holding-status status-checking">CHECKING...</span>';
+                }
+            });
+
+            try {
+                const response = await fetch(`/check_holdings/${encodeURIComponent(token)}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    btn.disabled = false;
+                    btn.textContent = '📊 Check Holdings';
+                    return;
+                }
+
+                document.getElementById(`holding-count-${index}`).textContent = data.still_holding;
+                document.getElementById(`sold-count-${index}`).textContent = data.sold;
+                summary.classList.add('active');
+
+                Object.entries(data.wallets).forEach(([wallet, status], idx) => {
+                    const walletDiv = walletsDiv.children[idx];
+                    if (walletDiv) {
+                        const statusSpan = walletDiv.querySelector('.holding-status');
+                        if (statusSpan) {
+                            statusSpan.textContent = status.status;
+                            statusSpan.className = `holding-status ${status.still_holding ? 'status-holding' : 'status-sold'}`;
+                        }
+                    }
+                });
+
+                btn.textContent = '✅ Updated';
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.textContent = '🔄 Recheck Holdings';
+                }, 2000);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to check holdings. Please try again.');
+                btn.disabled = false;
+                btn.textContent = '📊 Check Holdings';
+            }
+        }
+
+        async function addWallet() {
+            const addressInput = document.getElementById('walletAddress');
+            const nameInput = document.getElementById('walletName');
+            
+            const address = addressInput.value.trim();
+            const name = nameInput.value.trim();
+
+            if (!address) {
+                alert('Please enter a wallet address');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/custom_wallets', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({address, name})
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Wallet added successfully!');
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to add wallet');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to add wallet. Please try again.');
+            }
+        }
+
+        async function removeWallet(address, index) {
+            if (!confirm('Are you sure you want to remove this wallet?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/custom_wallets', {
+                    method: 'DELETE',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({address})
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Wallet removed successfully!');
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to remove wallet');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to remove wallet. Please try again.');
+            }
+        }
+
+        async function scanCustomWallets() {
+            const btn = document.getElementById('scanCustomBtn');
+            const loading = document.getElementById('customLoading');
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Scanning...';
+            loading.classList.add('active');
+
+            try {
+                const response = await fetch('/api/scan_custom_wallets');
+                const data = await response.json();
+
+                loading.classList.remove('active');
+                
+                if (data.success) {
+                    alert(`Scan complete! Found data for ${data.results.length} wallets.`);
+                    location.reload();
+                } else {
+                    alert(data.message || 'Scan failed');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to scan wallets. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔍 Scan Custom Wallets';
+                loading.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>
